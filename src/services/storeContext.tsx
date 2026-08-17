@@ -188,7 +188,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const session = JSON.parse(savedSession);
         if (session && session.isLoggedIn) {
           setIsAdminLoggedIn(true);
-          setAdminUserEmail(session.email || 'admin@kovaicompassholidays.com');
+          setAdminUserEmail(session.email || 'armani@kovaiholidays.com');
         }
       }
 

@@ -21,21 +21,66 @@ import { ContactPage } from './pages/ContactPage';
 import { AdminPage } from './pages/AdminPage';
 import { PolicyPages } from './pages/PolicyPages';
 
+// Helper function to resolve initial path from URL, hash, or search parameters
+const getActiveRoute = (): string => {
+  if (typeof window === 'undefined') return '/';
+
+  // 1. Check Query Parameters (e.g. ?admin, ?page=admin, ?route=/admin)
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('admin') || params.get('page') === 'admin' || params.get('view') === 'admin') {
+    return '/admin';
+  }
+  const paramRoute = params.get('route') || params.get('page');
+  if (paramRoute) {
+    return paramRoute.startsWith('/') ? paramRoute : `/${paramRoute}`;
+  }
+
+  // 2. Check Hash (e.g. #/admin or #admin)
+  const rawHash = window.location.hash.replace(/^#\/?/, '');
+  if (rawHash === 'admin' || rawHash.startsWith('admin/')) {
+    return '/admin';
+  }
+  if (rawHash) {
+    return rawHash.startsWith('/') ? rawHash : `/${rawHash}`;
+  }
+
+  // 3. Check Standard Pathname
+  let path = window.location.pathname || '/';
+  if (path.length > 1 && path.endsWith('/')) {
+    path = path.slice(0, -1);
+  }
+  return path;
+};
+
 export default function App() {
   const { settings } = useStore();
 
   // Router path state initialized from window location
-  const [currentPath, setCurrentPath] = useState<string>(() => {
-    return window.location.pathname || '/';
-  });
+  const [currentPath, setCurrentPath] = useState<string>(getActiveRoute);
 
-  // Handle popstate for browser back / forward buttons
+  // Handle popstate and hashchange for robust URL changes
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname || '/');
+    const handleUrlChange = () => {
+      setCurrentPath(getActiveRoute());
     };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+
+    window.addEventListener('popstate', handleUrlChange);
+    window.addEventListener('hashchange', handleUrlChange);
+
+    // Discrete shortcut: Alt + A or Ctrl + Alt + A to access Admin CMS instantly
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.altKey && e.key.toLowerCase() === 'a') || (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'a')) {
+        e.preventDefault();
+        navigate('/admin');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('popstate', handleUrlChange);
+      window.removeEventListener('hashchange', handleUrlChange);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const navigate = (path: string) => {
@@ -122,7 +167,7 @@ export default function App() {
     }
 
     // 7. Admin CMS
-    if (currentPath === '/admin') {
+    if (currentPath === '/admin' || currentPath.startsWith('/admin')) {
       return <AdminPage onNavigate={navigate} />;
     }
 
@@ -144,7 +189,7 @@ export default function App() {
     return <HomePage onNavigate={navigate} />;
   };
 
-  const isAdminRoute = currentPath === '/admin';
+  const isAdminRoute = currentPath === '/admin' || currentPath.startsWith('/admin');
 
   return (
     <div className="min-h-screen flex flex-col font-sans text-slate-800 bg-[#F8FAFC] w-full max-w-full overflow-x-hidden">

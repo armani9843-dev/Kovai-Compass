@@ -74,6 +74,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem('kch_admin_auth') === 'true';
   });
+  const [usernameInput, setUsernameInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -98,22 +99,39 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [editingFaq, setEditingFaq] = useState<FAQItem | null>(null);
   const [isNewFaq, setIsNewFaq] = useState(false);
 
-  // Password change state
+  // Admin Account & Password change state
+  const [adminUsernameSetting, setAdminUsernameSetting] = useState(() => {
+    return localStorage.getItem('kch_admin_username') || 'armani@kovaiholidays.com';
+  });
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
 
-  // Stored admin password (defaults to admin123)
+  // Stored admin credentials
+  const getStoredUsername = () => {
+    return (localStorage.getItem('kch_admin_username') || 'armani@kovaiholidays.com').trim().toLowerCase();
+  };
+
   const getStoredPassword = () => {
-    return localStorage.getItem('kch_admin_custom_password') || 'admin123';
+    return localStorage.getItem('kch_admin_custom_password') || 'Kovai@2026!Admin';
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    const validUsername = getStoredUsername();
     const validPassword = getStoredPassword();
-    if (passwordInput === validPassword || passwordInput === 'admin123' || passwordInput === 'admin') {
+    const enteredUser = usernameInput.trim().toLowerCase();
+    const enteredPass = passwordInput.trim();
+
+    const isUserValid = enteredUser === validUsername;
+    const isPassValid = enteredPass === validPassword;
+
+    if (isUserValid && isPassValid) {
       setIsAuthenticated(true);
       sessionStorage.setItem('kch_admin_auth', 'true');
-      addToast('Welcome to Kovai Compass CMS Dashboard!', 'success');
+      sessionStorage.setItem('kch_admin_user', enteredUser || validUsername);
+      addToast(`Welcome back, ${enteredUser || validUsername}!`, 'success');
+    } else if (!isUserValid) {
+      addToast('Invalid username / email. Please check your credentials.', 'error');
     } else {
       addToast('Incorrect password. Please try again.', 'error');
     }
@@ -122,23 +140,33 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const handleLogout = () => {
     setIsAuthenticated(false);
     sessionStorage.removeItem('kch_admin_auth');
+    sessionStorage.removeItem('kch_admin_user');
     addToast('Logged out of Admin Portal.', 'info');
   };
 
-  const handleSaveNewPassword = (e: React.FormEvent) => {
+  const handleSaveAdminAccount = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAdminPassword || newAdminPassword.length < 4) {
-      addToast('Password must be at least 4 characters long.', 'error');
+    if (!adminUsernameSetting || !adminUsernameSetting.includes('@')) {
+      addToast('Please enter a valid administrator email address.', 'error');
       return;
     }
-    if (newAdminPassword !== confirmAdminPassword) {
-      addToast('Passwords do not match.', 'error');
-      return;
+    localStorage.setItem('kch_admin_username', adminUsernameSetting.trim().toLowerCase());
+
+    if (newAdminPassword) {
+      if (newAdminPassword.length < 4) {
+        addToast('Password must be at least 4 characters long.', 'error');
+        return;
+      }
+      if (newAdminPassword !== confirmAdminPassword) {
+        addToast('New passwords do not match.', 'error');
+        return;
+      }
+      localStorage.setItem('kch_admin_custom_password', newAdminPassword);
+      setNewAdminPassword('');
+      setConfirmAdminPassword('');
     }
-    localStorage.setItem('kch_admin_custom_password', newAdminPassword);
-    setNewAdminPassword('');
-    setConfirmAdminPassword('');
-    addToast('Admin password updated successfully!', 'success');
+
+    addToast('Administrator login credentials updated successfully!', 'success');
   };
 
   // CSV Export for Enquiries
@@ -190,21 +218,38 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#071B33] via-[#0B2748] to-[#071B33] flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-8 text-center space-y-6">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-8 text-center space-y-6">
           <div className="w-16 h-16 bg-amber-50 text-[#C99A2E] border border-amber-200 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
-            <Lock className="w-8 h-8" />
+            <ShieldCheck className="w-8 h-8" />
           </div>
 
           <div>
             <span className="text-[11px] uppercase tracking-widest text-[#0D7F86] font-bold">Kovai Compass Holidays</span>
-            <h1 className="font-display text-2xl font-extrabold text-[#071B33] mt-1">Content Management System</h1>
-            <p className="text-xs text-slate-500 mt-1.5">Sign in to manage leads, tour itineraries, destination articles, and website settings.</p>
+            <h1 className="font-display text-2xl font-extrabold text-[#071B33] mt-1">Admin CMS Portal</h1>
+            <p className="text-xs text-slate-500 mt-1.5">Sign in to manage lead enquiries, tour packages, destination guides, and website settings.</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4 text-left">
             <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                Admin Password
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-[#0D7F86]" />
+                <span>Admin Username / Email</span>
+              </label>
+              <input
+                type="text"
+                value={usernameInput}
+                onChange={e => setUsernameInput(e.target.value)}
+                placeholder="Enter administrator email..."
+                className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#0D7F86] focus:outline-none"
+                required
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-[#0D7F86]" />
+                <span>Admin Password</span>
               </label>
               <div className="relative">
                 <input
@@ -212,13 +257,13 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
                   placeholder="Enter administrator password..."
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#0D7F86] focus:outline-none pr-10"
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-900 focus:bg-white focus:ring-2 focus:ring-[#0D7F86] focus:outline-none pr-14"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-medium"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs font-semibold px-1 py-0.5"
                 >
                   {showPassword ? 'Hide' : 'Show'}
                 </button>
@@ -229,25 +274,18 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               type="submit"
               className="btn-gold-gradient w-full font-bold text-sm py-3 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 cursor-pointer"
             >
-              Sign In to CMS Workspace
+              Sign In to Admin Workspace
             </button>
           </form>
 
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-[11px] text-slate-500 text-left space-y-1">
-            <div className="flex items-center gap-1.5 font-bold text-slate-700">
-              <Key className="w-3.5 h-3.5 text-[#C99A2E]" />
-              <span>Default Credentials:</span>
-            </div>
-            <p>Password: <code className="bg-white px-1.5 py-0.5 rounded border border-slate-300 font-mono font-bold text-slate-800">admin123</code></p>
-            <p className="text-[10px] text-slate-400">You can customize this password anytime from the Site Settings tab.</p>
+          <div className="pt-2">
+            <button
+              onClick={() => onNavigate('/')}
+              className="text-xs text-slate-500 hover:text-[#0D7F86] font-medium transition-colors"
+            >
+              ← Return to Live Website
+            </button>
           </div>
-
-          <button
-            onClick={() => onNavigate('/')}
-            className="text-xs text-slate-500 hover:text-[#0D7F86] font-medium transition-colors"
-          >
-            ← Return to Live Website
-          </button>
         </div>
       </div>
     );
@@ -256,29 +294,36 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-[#F1F5F9]">
       {/* Top Admin Header */}
-      <div className="bg-[#071B33] text-white py-4 px-4 sm:px-8 flex flex-wrap items-center justify-between gap-4 shadow-md sticky top-0 z-30">
+      <div className="bg-[#071B33] text-white py-3.5 px-4 sm:px-8 flex flex-wrap items-center justify-between gap-4 shadow-md sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[#C99A2E] text-[#071B33] rounded-xl shadow">
             <Compass className="w-5 h-5" />
           </div>
           <div>
             <h1 className="font-bold text-sm sm:text-base leading-tight">Kovai Compass CMS Workspace</h1>
-            <p className="text-[11px] text-amber-200/90 font-mono">Direct Portal: kovaicompassholidays.com/admin</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[11px] text-amber-300 font-mono flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-amber-400" />
+                <span>{sessionStorage.getItem('kch_admin_user') || 'armani@kovaiholidays.com'}</span>
+              </span>
+              <span className="text-slate-600">•</span>
+              <span className="text-[10px] text-slate-400 font-mono">/admin</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => onNavigate('/')}
-            className="flex items-center gap-1.5 text-xs text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-800 px-3.5 py-2 rounded-xl transition-all border border-slate-700 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-slate-200 hover:text-white bg-slate-800/90 hover:bg-slate-800 px-3 py-2 rounded-xl transition-all border border-slate-700 cursor-pointer"
           >
             <ExternalLink className="w-3.5 h-3.5 text-amber-400" />
-            <span>View Live Site</span>
+            <span className="hidden sm:inline">View Live Site</span>
           </button>
 
           <button
             onClick={handleLogout}
-            className="flex items-center gap-1.5 text-xs text-rose-200 hover:text-white bg-rose-950/60 hover:bg-rose-900 border border-rose-800/80 px-3.5 py-2 rounded-xl transition-all cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-rose-200 hover:text-white bg-rose-950/60 hover:bg-rose-900 border border-rose-800/80 px-3 py-2 rounded-xl transition-all cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5 text-rose-400" />
             <span>Logout</span>
@@ -1062,45 +1107,64 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            {/* Change Password Card */}
+            {/* Admin Account & Security Settings Card */}
             <div className="lg:col-span-4 space-y-6">
               <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 space-y-4">
                 <div className="flex items-center gap-2 text-[#071B33]">
-                  <Key className="w-5 h-5 text-[#C99A2E]" />
-                  <h3 className="font-display font-bold text-base">Change CMS Password</h3>
+                  <ShieldCheck className="w-5 h-5 text-[#0D7F86]" />
+                  <h3 className="font-display font-bold text-base">Admin Login Credentials</h3>
                 </div>
-                <p className="text-xs text-slate-500">Update your administrator password used to access this CMS dashboard.</p>
+                <p className="text-xs text-slate-500">Configure the username/email and password used to sign in to this CMS dashboard.</p>
 
-                <form onSubmit={handleSaveNewPassword} className="space-y-3 text-xs">
+                <form onSubmit={handleSaveAdminAccount} className="space-y-3.5 text-xs">
                   <div>
-                    <label className="block font-bold text-slate-700 mb-1">New Password</label>
+                    <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-[#0D7F86]" />
+                      <span>Administrator Email / Username</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={adminUsernameSetting}
+                      onChange={e => setAdminUsernameSetting(e.target.value)}
+                      placeholder="armani@kovaiholidays.com"
+                      className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white text-slate-900 font-medium"
+                      required
+                    />
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <label className="block font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <Key className="w-3.5 h-3.5 text-[#C99A2E]" />
+                      <span>New Password (optional)</span>
+                    </label>
                     <input
                       type="password"
                       value={newAdminPassword}
                       onChange={e => setNewAdminPassword(e.target.value)}
-                      placeholder="Minimum 4 characters"
+                      placeholder="Leave blank to keep current password"
                       className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
-                      required
                     />
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-slate-700 mb-1">Confirm New Password</label>
-                    <input
-                      type="password"
-                      value={confirmAdminPassword}
-                      onChange={e => setConfirmAdminPassword(e.target.value)}
-                      placeholder="Re-type new password"
-                      className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
-                      required
-                    />
-                  </div>
+                  {newAdminPassword && (
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1">Confirm New Password</label>
+                      <input
+                        type="password"
+                        value={confirmAdminPassword}
+                        onChange={e => setConfirmAdminPassword(e.target.value)}
+                        placeholder="Re-type new password"
+                        className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white"
+                        required
+                      />
+                    </div>
+                  )}
 
                   <button
                     type="submit"
                     className="btn-gold-gradient w-full font-bold text-xs py-2.5 rounded-xl shadow cursor-pointer"
                   >
-                    Save New Password
+                    Update Admin Credentials
                   </button>
                 </form>
               </div>
@@ -1108,12 +1172,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               {/* Direct CMS Link Reference */}
               <div className="bg-[#071B33] text-white p-6 rounded-3xl space-y-3">
                 <h4 className="font-bold text-sm text-amber-300">Direct Link to CMS:</h4>
-                <p className="text-xs text-slate-300">Bookmark this URL to access your Content Management System directly:</p>
+                <p className="text-xs text-slate-300">Save this private URL to access your Content Management System directly:</p>
                 <div className="bg-slate-900/80 p-2.5 rounded-xl text-xs font-mono text-teal-300 flex items-center justify-between border border-slate-700">
-                  <span className="truncate">/admin</span>
+                  <span className="truncate">https://www.kovaicompassholidays.com/admin</span>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(`${window.location.origin}/admin`);
+                      navigator.clipboard.writeText('https://www.kovaicompassholidays.com/admin');
                       addToast('CMS URL copied to clipboard!', 'success');
                     }}
                     className="text-amber-400 hover:text-amber-300 ml-2"
@@ -1122,7 +1186,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     <Copy className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-400">Hidden from the main menu for security. Only administrators with the link and password can sign in.</p>
+                <p className="text-[11px] text-slate-400">Unlisted from the public website for security. Only authorized administrators with the login credentials can sign in.</p>
               </div>
             </div>
           </div>

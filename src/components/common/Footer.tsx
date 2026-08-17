@@ -196,10 +196,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <button onClick={() => handleNav('/refund-policy')} className="hover:text-slate-200 transition-colors">
               Refund Policy
             </button>
-            <span>•</span>
-            <button onClick={() => handleNav('/admin')} className="text-amber-400/80 hover:text-amber-300 transition-colors">
-              Admin CMS
-            </button>
           </div>
         </div>
       </div>
