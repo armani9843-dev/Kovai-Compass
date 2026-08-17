@@ -1,0 +1,6 @@
+{
+  "name": "Kovai Compass Holidays",
+  "description": "Premium international tour packages, customized holiday planning, and travel services for Singapore, Malaysia, Thailand, Sri Lanka, and Cambodia.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
