@@ -149,8 +149,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Load Initial Data
+  // Load Initial Data with Firebase Firestore real-time listeners and offline fallbacks
   useEffect(() => {
+    let unsubscribeEnquiries: (() => void) | undefined;
+    let unsubscribeCustomTrips: (() => void) | undefined;
+    let unsubscribePackages: (() => void) | undefined;
+    let unsubscribeDestinations: (() => void) | undefined;
+    let unsubscribeBlogs: (() => void) | undefined;
+    let unsubscribeSettings: (() => void) | undefined;
+
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
       if (savedSettings) setSettings(JSON.parse(savedSettings));
@@ -184,11 +191,73 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setAdminUserEmail(session.email || 'admin@kovaicompassholidays.com');
         }
       }
+
+      // Connect Firestore Live Real-time Listeners
+      if (firestore) {
+        try {
+          unsubscribeEnquiries = onSnapshot(collection(firestore, 'enquiries'), (snapshot) => {
+            if (!snapshot.empty) {
+              const liveEnquiries: Enquiry[] = [];
+              snapshot.forEach((doc) => {
+                liveEnquiries.push({ ...doc.data() as Enquiry, id: doc.id });
+              });
+              liveEnquiries.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              setEnquiries(liveEnquiries);
+              saveToLocal(STORAGE_KEYS.ENQUIRIES, liveEnquiries);
+            }
+          }, (err) => console.info('Enquiries live listener info:', err));
+
+          unsubscribeCustomTrips = onSnapshot(collection(firestore, 'customTripRequests'), (snapshot) => {
+            if (!snapshot.empty) {
+              const liveTrips: CustomTripRequest[] = [];
+              snapshot.forEach((doc) => {
+                liveTrips.push({ ...doc.data() as CustomTripRequest, id: doc.id });
+              });
+              liveTrips.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+              setCustomTrips(liveTrips);
+              saveToLocal(STORAGE_KEYS.CUSTOM_TRIPS, liveTrips);
+            }
+          }, (err) => console.info('Custom trips live listener info:', err));
+
+          unsubscribePackages = onSnapshot(collection(firestore, 'packages'), (snapshot) => {
+            if (!snapshot.empty) {
+              const livePackages: TourPackage[] = [];
+              snapshot.forEach((doc) => {
+                livePackages.push({ ...doc.data() as TourPackage, id: doc.id });
+              });
+              setPackages(livePackages);
+              saveToLocal(STORAGE_KEYS.PACKAGES, livePackages);
+            }
+          }, (err) => console.info('Packages live listener info:', err));
+
+          unsubscribeDestinations = onSnapshot(collection(firestore, 'destinations'), (snapshot) => {
+            if (!snapshot.empty) {
+              const liveDests: Destination[] = [];
+              snapshot.forEach((doc) => {
+                liveDests.push({ ...doc.data() as Destination, id: doc.id });
+              });
+              setDestinations(liveDests);
+              saveToLocal(STORAGE_KEYS.DESTINATIONS, liveDests);
+            }
+          }, (err) => console.info('Destinations live listener info:', err));
+        } catch (firebaseErr) {
+          console.warn('Firestore subscription notice:', firebaseErr);
+        }
+      }
     } catch (e) {
-      console.warn('Local storage load warning:', e);
+      console.warn('Store init warning:', e);
     } finally {
       setIsLoading(false);
     }
+
+    return () => {
+      if (unsubscribeEnquiries) unsubscribeEnquiries();
+      if (unsubscribeCustomTrips) unsubscribeCustomTrips();
+      if (unsubscribePackages) unsubscribePackages();
+      if (unsubscribeDestinations) unsubscribeDestinations();
+      if (unsubscribeBlogs) unsubscribeBlogs();
+      if (unsubscribeSettings) unsubscribeSettings();
+    };
   }, []);
 
   // Sync state helpers
@@ -245,7 +314,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // If Firestore active
     if (firestore) {
       try {
-        await addDoc(collection(firestore, 'enquiries'), newEnquiry);
+        await setDoc(doc(firestore, 'enquiries', newEnquiry.id), newEnquiry);
       } catch (err) {
         console.warn('Firestore write fallback used:', err);
       }
@@ -286,20 +355,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateEnquiryStatus = async (id: string, status: EnquiryStatus, notes?: string, staff?: string) => {
+    let updatedEnquiry: Enquiry | undefined;
     const updated = enquiries.map(e => {
       if (e.id === id) {
-        return {
+        updatedEnquiry = {
           ...e,
           status,
           internalNotes: notes !== undefined ? notes : e.internalNotes,
           assignedStaff: staff !== undefined ? staff : e.assignedStaff,
           updatedAt: new Date().toISOString()
         };
+        return updatedEnquiry;
       }
       return e;
     });
     setEnquiries(updated);
     saveToLocal(STORAGE_KEYS.ENQUIRIES, updated);
+    if (firestore && updatedEnquiry) {
+      try {
+        await setDoc(doc(firestore, 'enquiries', id), updatedEnquiry, { merge: true });
+      } catch (err) {
+        console.warn('Firestore update enquiry status error:', err);
+      }
+    }
     addToast(`Enquiry status updated to ${status}`, 'info');
   };
 
@@ -307,22 +385,38 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updated = enquiries.filter(e => e.id !== id);
     setEnquiries(updated);
     saveToLocal(STORAGE_KEYS.ENQUIRIES, updated);
+    if (firestore) {
+      try {
+        await deleteDoc(doc(firestore, 'enquiries', id));
+      } catch (err) {
+        console.warn('Firestore delete enquiry error:', err);
+      }
+    }
     addToast('Enquiry removed', 'info');
   };
 
   const updateCustomTripStatus = async (id: string, status: EnquiryStatus, notes?: string) => {
+    let updatedTrip: CustomTripRequest | undefined;
     const updated = customTrips.map(t => {
       if (t.id === id) {
-        return {
+        updatedTrip = {
           ...t,
           status,
           internalNotes: notes !== undefined ? notes : t.internalNotes
         };
+        return updatedTrip;
       }
       return t;
     });
     setCustomTrips(updated);
     saveToLocal(STORAGE_KEYS.CUSTOM_TRIPS, updated);
+    if (firestore && updatedTrip) {
+      try {
+        await setDoc(doc(firestore, 'customTripRequests', id), updatedTrip, { merge: true });
+      } catch (err) {
+        console.warn('Firestore update trip error:', err);
+      }
+    }
     addToast(`Custom Trip status updated to ${status}`, 'info');
   };
 
@@ -330,20 +424,37 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updated = customTrips.filter(t => t.id !== id);
     setCustomTrips(updated);
     saveToLocal(STORAGE_KEYS.CUSTOM_TRIPS, updated);
+    if (firestore) {
+      try {
+        await deleteDoc(doc(firestore, 'customTripRequests', id));
+      } catch (err) {
+        console.warn('Firestore delete trip error:', err);
+      }
+    }
     addToast('Custom trip request removed', 'info');
   };
 
   // CMS - Packages
   const savePackage = async (pkg: TourPackage) => {
     const exists = packages.some(p => p.id === pkg.id);
+    let targetPkg: TourPackage;
     let updated: TourPackage[];
     if (exists) {
-      updated = packages.map(p => p.id === pkg.id ? { ...pkg, updatedAt: new Date().toISOString() } : p);
+      targetPkg = { ...pkg, updatedAt: new Date().toISOString() };
+      updated = packages.map(p => p.id === pkg.id ? targetPkg : p);
     } else {
-      updated = [{ ...pkg, createdAt: new Date().toISOString() }, ...packages];
+      targetPkg = { ...pkg, createdAt: new Date().toISOString() };
+      updated = [targetPkg, ...packages];
     }
     setPackages(updated);
     saveToLocal(STORAGE_KEYS.PACKAGES, updated);
+    if (firestore) {
+      try {
+        await setDoc(doc(firestore, 'packages', targetPkg.id), targetPkg);
+      } catch (err) {
+        console.warn('Firestore save package error:', err);
+      }
+    }
     addToast(exists ? 'Package updated successfully' : 'New package created', 'success');
   };
 
@@ -351,6 +462,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const updated = packages.filter(p => p.id !== id);
     setPackages(updated);
     saveToLocal(STORAGE_KEYS.PACKAGES, updated);
+    if (firestore) {
+      try {
+        await deleteDoc(doc(firestore, 'packages', id));
+      } catch (err) {
+        console.warn('Firestore delete package error:', err);
+      }
+    }
     addToast('Package deleted', 'info');
   };
 

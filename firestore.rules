@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Packages and destinations are public to read, and writeable for admin/management
+    match /packages/{packageId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /destinations/{destId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /blogPosts/{blogId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /testimonials/{testId} {
+      allow read: if true;
+      allow write: if true;
+    }
+
+    // Leads & Enquiries: visitors can create new enquiries, manage and read for CRM
+    match /enquiries/{enquiryId} {
+      allow read, write: if true;
+    }
+
+    // Custom Trip Planner Requests
+    match /customTours/{tourId} {
+      allow read, write: if true;
+    }
+
+    // General app settings & config
+    match /settings/{settingId} {
+      allow read, write: if true;
+    }
+  }
+}
