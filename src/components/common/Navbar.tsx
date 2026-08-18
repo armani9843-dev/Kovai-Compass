@@ -126,14 +126,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
 
           <div className="flex items-center gap-4">
             <span className="text-slate-400">{settings.businessHours}</span>
-            <button 
-              onClick={() => handleLinkClick('/admin')} 
-              className="flex items-center gap-1 text-slate-400 hover:text-amber-300 transition-colors text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-slate-700"
-              title="Admin CMS Portal"
-            >
-              <Lock className="w-3 h-3 text-amber-400" />
-              <span>{isAdminLoggedIn ? 'CMS Dashboard (Active)' : 'Admin CMS'}</span>
-            </button>
+            {isAdminLoggedIn && (
+              <button 
+                onClick={() => handleLinkClick('/admin')} 
+                className="flex items-center gap-1 text-amber-300 hover:text-white transition-colors text-[11px] bg-slate-800/80 px-2 py-0.5 rounded border border-amber-500/40"
+                title="Admin CMS Portal"
+              >
+                <Lock className="w-3 h-3 text-amber-400" />
+                <span>CMS Dashboard (Active)</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

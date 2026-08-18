@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/storeContext';
+import { handleImageError } from '../utils/imageFallback';
 import { 
   FileText, 
   Sparkles, 
@@ -96,6 +97,7 @@ export const TravelGuidePage: React.FC<TravelGuidePageProps> = ({ onNavigate }) 
                   alt={post.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
+                  onError={handleImageError}
                 />
                 <span className="absolute top-3 left-3 bg-[#071B33]/85 text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded backdrop-blur-sm">
                   {post.category}

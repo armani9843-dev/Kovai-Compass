@@ -1,6 +1,7 @@
 import React from 'react';
 import { useStore } from '../services/storeContext';
 import { formatINR } from '../utils/helpers';
+import { handleImageError } from '../utils/imageFallback';
 import { 
   MapPin, 
   Sparkles, 
@@ -59,6 +60,7 @@ export const DestinationsPage: React.FC<DestinationsPageProps> = ({ onNavigate }
                   alt={dest.name}
                   className="w-full h-full object-cover"
                   loading="lazy"
+                  onError={handleImageError}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                 

@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useStore } from '../services/storeContext';
 import { formatINR } from '../utils/helpers';
+import { handleImageError } from '../utils/imageFallback';
 import { 
   Compass, 
   MapPin, 
@@ -197,6 +198,7 @@ export const PackagesPage: React.FC<PackagesPageProps> = ({ onNavigate }) => {
                     alt={pkg.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
+                    onError={handleImageError}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
 

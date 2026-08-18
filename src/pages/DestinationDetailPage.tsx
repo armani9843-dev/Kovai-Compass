@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/storeContext';
 import { formatINR } from '../utils/helpers';
+import { handleImageError } from '../utils/imageFallback';
 import { 
   MapPin, 
   Sparkles, 
@@ -25,17 +26,24 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({ sl
   const { destinations, packages, openEnquiryModal } = useStore();
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
-  const destination = destinations.find(d => d.slug === slug) || destinations[0];
+  const cleanSlug = decodeURIComponent(slug || '').trim().toLowerCase();
+  const destination = destinations.find(d => d.slug.toLowerCase() === cleanSlug || d.id.toLowerCase() === cleanSlug) || destinations[0];
 
   if (!destination) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-16 h-16 rounded-full bg-amber-50 text-[#C99A2E] flex items-center justify-center mb-4">
+          <Compass className="w-8 h-8 animate-spin" style={{ animationDuration: '20s' }} />
+        </div>
         <h2 className="text-2xl font-bold text-[#071B33]">Destination Not Found</h2>
+        <p className="text-sm text-slate-600 max-w-md mt-2">
+          The requested destination could not be located. Explore all our Asian destinations below.
+        </p>
         <button 
           onClick={() => onNavigate('/destinations')}
-          className="mt-4 px-4 py-2 bg-[#0D7F86] text-white rounded-lg"
+          className="mt-5 px-6 py-2.5 bg-[#0D7F86] hover:bg-[#071B33] text-white font-bold text-xs rounded-xl shadow transition-all"
         >
-          Back to Destinations
+          View All Destinations
         </button>
       </div>
     );
@@ -54,6 +62,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({ sl
           src={destination.heroImage}
           alt={destination.name}
           className="absolute inset-0 w-full h-full object-cover"
+          onError={handleImageError}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#071B33] via-[#071B33]/70 to-black/30" />
 
@@ -149,7 +158,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({ sl
                 {destination.topAttractions.map((att, idx) => (
                   <div key={idx} className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
                     <div className="h-44 overflow-hidden relative">
-                      <img src={att.image} alt={att.name} className="w-full h-full object-cover" />
+                      <img src={att.image} alt={att.name} className="w-full h-full object-cover" onError={handleImageError} loading="lazy" />
                     </div>
                     <div className="p-5 space-y-2">
                       <h3 className="font-display text-base font-bold text-[#071B33]">{att.name}</h3>
@@ -187,7 +196,7 @@ export const DestinationDetailPage: React.FC<DestinationDetailPageProps> = ({ sl
                       className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all cursor-pointer flex flex-col justify-between"
                     >
                       <div className="relative h-48">
-                        <img src={pkg.heroImage} alt={pkg.title} className="w-full h-full object-cover" />
+                        <img src={pkg.heroImage} alt={pkg.title} className="w-full h-full object-cover" onError={handleImageError} loading="lazy" />
                         <span className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2.5 py-1 rounded backdrop-blur-md">
                           {pkg.durationDays}D / {pkg.durationNights}N
                         </span>

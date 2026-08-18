@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../../services/storeContext';
+import { handleImageError } from '../../utils/imageFallback';
 import { 
   Compass, 
   Sparkles, 
@@ -90,6 +91,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             src={s.image}
             alt={s.title}
             className="w-full h-full object-cover object-center"
+            onError={handleImageError}
           />
         </div>
       ))}

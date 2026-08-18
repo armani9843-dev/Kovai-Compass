@@ -77,7 +77,7 @@ interface StoreContextType {
   deleteTestimonial: (id: string) => Promise<void>;
   saveFAQ: (faq: FAQItem) => Promise<void>;
   deleteFAQ: (id: string) => Promise<void>;
-  updateSettings: (newSettings: SiteSettings) => Promise<void>;
+  updateSettings: (newSettings: Partial<SiteSettings>) => Promise<void>;
   
   // Tools & Modals
   resetToInitialDemoData: () => void;
@@ -577,9 +577,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   // CMS - Settings
-  const updateSettings = async (newSettings: SiteSettings) => {
-    setSettings(newSettings);
-    saveToLocal(STORAGE_KEYS.SETTINGS, newSettings);
+  const updateSettings = async (newSettings: Partial<SiteSettings>) => {
+    const merged: SiteSettings = { ...settings, ...newSettings };
+    setSettings(merged);
+    saveToLocal(STORAGE_KEYS.SETTINGS, merged);
+    if (firestore) {
+      try {
+        await setDoc(doc(firestore, 'settings', 'general'), merged);
+      } catch (err) {
+        console.warn('Firestore update settings error:', err);
+      }
+    }
     addToast('Website & Contact settings updated', 'success');
   };
 
