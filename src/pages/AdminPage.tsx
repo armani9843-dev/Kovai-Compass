@@ -524,7 +524,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                               value={enq.status}
                               onChange={e => updateEnquiryStatus(enq.id, e.target.value as EnquiryStatus)}
                               className={`text-xs font-bold px-2.5 py-1.5 rounded-lg border focus:outline-none ${
-                                enq.status === 'New'
+                                enq.status === 'New' || enq.status === 'new'
                                   ? 'bg-amber-50 text-amber-800 border-amber-300'
                                   : enq.status === 'Contacted'
                                   ? 'bg-blue-50 text-blue-800 border-blue-300'
@@ -663,7 +663,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                           <strong>Holiday Type:</strong> {trip.travelStyle}
                         </div>
                         <div>
-                          <strong>Approx Travel Date:</strong> {trip.preferredTravelDate || 'Flexible'}<br />
+                          <strong>Approx Travel Date:</strong> {trip.travelDate || 'Flexible'}<br />
                           <strong>Departure City:</strong> {trip.departureCity || 'Coimbatore / India'}
                         </div>
                       </div>
@@ -679,9 +679,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                         </div>
                       )}
 
-                      {trip.specialRequests && (
+                      {trip.specialRequirements && (
                         <div className="text-xs bg-amber-50/80 p-2.5 rounded-lg border border-amber-200 text-amber-900">
-                          <strong>Client Notes:</strong> {trip.specialRequests}
+                          <strong>Client Notes:</strong> {trip.specialRequirements}
                         </div>
                       )}
                     </div>
@@ -869,15 +869,15 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     id: `blog-${Date.now()}`,
                     title: '',
                     slug: `guide-${Date.now()}`,
-                    shortDescription: '',
+                    excerpt: '',
                     content: '',
                     author: 'Kovai Compass Travel Desk',
+                    authorRole: 'Senior Travel Specialist',
                     publishedDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
                     category: 'Singapore Visa & Tips',
                     readTime: '4 min read',
-                    featuredImage: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80',
+                    heroImage: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80',
                     isPublished: true,
-                    isFeatured: false,
                     tags: ['Travel Tips', 'Holiday Planning']
                   });
                   setIsNewBlog(true);
@@ -893,7 +893,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               {blogPosts.map(post => (
                 <div key={post.id} className="p-4 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <img src={post.featuredImage} alt={post.title} className="w-16 h-16 rounded-xl object-cover" />
+                    <img src={post.heroImage} alt={post.title} className="w-16 h-16 rounded-xl object-cover" />
                     <div>
                       <span className="text-[10px] font-bold text-[#0D7F86] uppercase">{post.category}</span>
                       <h4 className="font-bold text-slate-900 text-sm">{post.title}</h4>
@@ -948,7 +948,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                     destination: 'Singapore & Malaysia',
                     rating: 5,
                     review: '',
-                    travelDate: 'Recent',
+                    date: 'Recent',
                     isPublished: true,
                     isVerified: true
                   });
@@ -1431,19 +1431,19 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 <label className="block font-bold text-slate-700 mb-1">Excerpt / Brief Summary</label>
                 <textarea
                   rows={2}
-                  value={editingBlog.shortDescription}
-                  onChange={e => setEditingBlog({ ...editingBlog, shortDescription: e.target.value })}
+                  value={editingBlog.excerpt}
+                  onChange={e => setEditingBlog({ ...editingBlog, excerpt: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
                   required
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Featured Image URL</label>
+                <label className="block font-bold text-slate-700 mb-1">Hero Image URL</label>
                 <input
                   type="text"
-                  value={editingBlog.featuredImage}
-                  onChange={e => setEditingBlog({ ...editingBlog, featuredImage: e.target.value })}
+                  value={editingBlog.heroImage}
+                  onChange={e => setEditingBlog({ ...editingBlog, heroImage: e.target.value })}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
                 />
               </div>

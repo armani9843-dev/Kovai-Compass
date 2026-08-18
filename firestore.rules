@@ -1,37 +1,33 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Packages & destinations
+    // Packages and destinations are public to read, and writeable for admin/management
     match /packages/{packageId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     match /destinations/{destId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     match /blogPosts/{blogId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
     
     match /testimonials/{testId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if true;
     }
 
-    match /faqs/{faqId} {
-      allow read, write: if true;
-    }
-
-    // Leads & Enquiries
+    // Leads & Enquiries: visitors can create new enquiries, manage and read for CRM
     match /enquiries/{enquiryId} {
       allow read, write: if true;
     }
 
-    // Custom Trip Planner Requests (customTripRequests and customTours)
-    match /customTripRequests/{tripId} {
-      allow read, write: if true;
-    }
-
+    // Custom Trip Planner Requests
     match /customTours/{tourId} {
       allow read, write: if true;
     }
@@ -40,11 +36,5 @@ service cloud.firestore {
     match /settings/{settingId} {
       allow read, write: if true;
     }
-
-    // Fallback for all other collections
-    match /{document=**} {
-      allow read, write: if true;
-    }
   }
 }
-

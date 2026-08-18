@@ -32,7 +32,7 @@ const getActiveRoute = (): string => {
   }
   const paramRoute = params.get('route') || params.get('page');
   if (paramRoute) {
-    return normalizeRoute(paramRoute.startsWith('/') ? paramRoute : `/${paramRoute}`);
+    return paramRoute.startsWith('/') ? paramRoute : `/${paramRoute}`;
   }
 
   // 2. Check Hash (e.g. #/admin or #admin)
@@ -41,33 +41,15 @@ const getActiveRoute = (): string => {
     return '/admin';
   }
   if (rawHash) {
-    return normalizeRoute(rawHash.startsWith('/') ? rawHash : `/${rawHash}`);
+    return rawHash.startsWith('/') ? rawHash : `/${rawHash}`;
   }
 
   // 3. Check Standard Pathname
   let path = window.location.pathname || '/';
-  return normalizeRoute(path);
-};
-
-// Route normalizer to fix trailing slashes and common aliases
-const normalizeRoute = (rawPath: string): string => {
-  let path = rawPath.trim();
   if (path.length > 1 && path.endsWith('/')) {
     path = path.slice(0, -1);
   }
-
-  // Common aliases
-  if (path === '/privacy-policy') return '/privacy';
-  if (path === '/terms-and-conditions' || path === '/terms-of-service') return '/terms';
-  if (path === '/cancellation-policy') return '/cancellation';
-  if (path === '/refund-policy') return '/refund';
-  if (path === '/tours' || path === '/tour-packages' || path === '/tour') return '/packages';
-  if (path === '/custom-tour' || path === '/custom-trip' || path === '/custom-trips' || path === '/planner') return '/custom-tours';
-  if (path === '/travel-guides' || path === '/blog' || path === '/blogs' || path === '/guides') return '/travel-guide';
-  if (path === '/about-us') return '/about';
-  if (path === '/contact-us') return '/contact';
-
-  return path || '/';
+  return path;
 };
 
 export default function App() {
@@ -101,8 +83,7 @@ export default function App() {
     };
   }, []);
 
-  const navigate = (rawPath: string) => {
-    const path = normalizeRoute(rawPath);
+  const navigate = (path: string) => {
     if (path !== currentPath) {
       window.history.pushState({}, '', path);
       setCurrentPath(path);

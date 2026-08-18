@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/storeContext';
 import { formatINR, createWhatsAppUrl } from '../utils/helpers';
-import { handleImageError } from '../utils/imageFallback';
 import { 
   ArrowLeft, 
   MapPin, 
@@ -30,24 +29,17 @@ export const PackageDetailPage: React.FC<PackageDetailPageProps> = ({ slug, onNa
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [openDayIndex, setOpenDayIndex] = useState<number | null>(0);
 
-  const cleanSlug = decodeURIComponent(slug || '').trim().toLowerCase();
-  const pkg = packages.find(p => p.slug.toLowerCase() === cleanSlug || p.id.toLowerCase() === cleanSlug) || packages[0];
+  const pkg = packages.find(p => p.slug === slug) || packages[0];
 
   if (!pkg) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-50 text-[#C99A2E] flex items-center justify-center mb-4">
-          <Compass className="w-8 h-8 animate-spin" style={{ animationDuration: '20s' }} />
-        </div>
         <h2 className="text-2xl font-bold text-[#071B33]">Package Not Found</h2>
-        <p className="text-sm text-slate-600 max-w-md mt-2">
-          The requested tour package could not be located. Explore our full catalog of holiday packages below.
-        </p>
         <button 
           onClick={() => onNavigate('/packages')}
-          className="mt-5 px-6 py-2.5 bg-[#0D7F86] hover:bg-[#071B33] text-white font-bold text-xs rounded-xl shadow transition-all"
+          className="mt-4 px-4 py-2 bg-[#0D7F86] text-white rounded-lg"
         >
-          View All Packages
+          Back to Packages
         </button>
       </div>
     );
@@ -112,8 +104,6 @@ export const PackageDetailPage: React.FC<PackageDetailPageProps> = ({ slug, onNa
               src={gallery[activeImageIndex] || pkg.heroImage}
               alt={pkg.title}
               className="w-full h-full object-cover"
-              onError={handleImageError}
-              loading="lazy"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
             <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-md text-white text-xs font-semibold px-3 py-1.5 rounded-lg">
@@ -131,7 +121,7 @@ export const PackageDetailPage: React.FC<PackageDetailPageProps> = ({ slug, onNa
                     activeImageIndex === i ? 'border-[#C99A2E] ring-2 ring-[#C99A2E]/30 scale-105' : 'border-transparent opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={img} alt={`Preview ${i}`} className="w-full h-full object-cover" onError={handleImageError} loading="lazy" />
+                  <img src={img} alt={`Preview ${i}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

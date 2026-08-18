@@ -4,7 +4,6 @@ import { TripPlannerSearch } from '../components/home/TripPlannerSearch';
 import { FeaturedDestinations } from '../components/home/FeaturedDestinations';
 import { useStore } from '../services/storeContext';
 import { formatINR } from '../utils/helpers';
-import { handleImageError } from '../utils/imageFallback';
 import { 
   ShieldCheck, 
   Clock, 
@@ -151,7 +150,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                     alt={pkg.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
-                    onError={handleImageError}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/20" />
 
@@ -362,7 +360,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                     alt={post.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     loading="lazy"
-                    onError={handleImageError}
                   />
                   <span className="absolute top-3 left-3 bg-[#071B33]/85 text-amber-300 text-[11px] font-bold px-2.5 py-1 rounded backdrop-blur-sm">
                     {post.category}

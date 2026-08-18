@@ -1,6 +1,5 @@
 import React from 'react';
 import { useStore } from '../services/storeContext';
-import { handleImageError } from '../utils/imageFallback';
 import { 
   Compass, 
   ShieldCheck, 
@@ -63,8 +62,6 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
                 src="https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1200&q=80"
                 alt="Singapore Marina Bay"
                 className="w-full h-full object-cover"
-                onError={handleImageError}
-                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#071B33]/80 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 text-white">

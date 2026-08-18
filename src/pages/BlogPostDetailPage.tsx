@@ -1,6 +1,5 @@
 import React from 'react';
 import { useStore } from '../services/storeContext';
-import { handleImageError } from '../utils/imageFallback';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -21,24 +20,17 @@ interface BlogPostDetailPageProps {
 export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, onNavigate }) => {
   const { blogPosts, openEnquiryModal, addToast } = useStore();
 
-  const cleanSlug = decodeURIComponent(slug || '').trim().toLowerCase();
-  const post = blogPosts.find(b => b.slug.toLowerCase() === cleanSlug || b.id.toLowerCase() === cleanSlug) || blogPosts[0];
+  const post = blogPosts.find(b => b.slug === slug) || blogPosts[0];
 
   if (!post) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-amber-50 text-[#C99A2E] flex items-center justify-center mb-4">
-          <Compass className="w-8 h-8 animate-spin" style={{ animationDuration: '20s' }} />
-        </div>
         <h2 className="text-2xl font-bold text-[#071B33]">Article Not Found</h2>
-        <p className="text-sm text-slate-600 max-w-md mt-2">
-          The requested travel guide or visa article could not be located. Explore our full library of guides below.
-        </p>
         <button 
           onClick={() => onNavigate('/travel-guide')}
-          className="mt-5 px-6 py-2.5 bg-[#0D7F86] hover:bg-[#071B33] text-white font-bold text-xs rounded-xl shadow transition-all"
+          className="mt-4 px-4 py-2 bg-[#0D7F86] text-white rounded-lg"
         >
-          View All Travel Guides
+          Back to Travel Guide
         </button>
       </div>
     );
@@ -101,7 +93,7 @@ export const BlogPostDetailPage: React.FC<BlogPostDetailPageProps> = ({ slug, on
 
         {/* Featured Image */}
         <div className="rounded-3xl overflow-hidden shadow-md border border-slate-200 h-[320px] sm:h-[420px]">
-          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" onError={handleImageError} loading="lazy" />
+          <img src={post.featuredImage} alt={post.title} className="w-full h-full object-cover" />
         </div>
 
         {/* Article Content */}
