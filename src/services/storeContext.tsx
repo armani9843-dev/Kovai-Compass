@@ -160,35 +160,97 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     try {
       const savedSettings = localStorage.getItem(STORAGE_KEYS.SETTINGS);
-      if (savedSettings) setSettings(JSON.parse(savedSettings));
+      if (savedSettings) {
+        try {
+          const parsed = JSON.parse(savedSettings);
+          if (parsed && typeof parsed === 'object') {
+            setSettings({ ...INITIAL_SETTINGS, ...parsed });
+          }
+        } catch (e) {
+          console.warn('Error parsing saved settings:', e);
+        }
+      }
 
       const savedDestinations = localStorage.getItem(STORAGE_KEYS.DESTINATIONS);
-      if (savedDestinations) setDestinations(JSON.parse(savedDestinations));
+      if (savedDestinations) {
+        try {
+          const parsed = JSON.parse(savedDestinations);
+          if (Array.isArray(parsed) && parsed.length > 0) setDestinations(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved destinations:', e);
+        }
+      }
 
       const savedPackages = localStorage.getItem(STORAGE_KEYS.PACKAGES);
-      if (savedPackages) setPackages(JSON.parse(savedPackages));
+      if (savedPackages) {
+        try {
+          const parsed = JSON.parse(savedPackages);
+          if (Array.isArray(parsed) && parsed.length > 0) setPackages(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved packages:', e);
+        }
+      }
 
       const savedBlogs = localStorage.getItem(STORAGE_KEYS.BLOGS);
-      if (savedBlogs) setBlogPosts(JSON.parse(savedBlogs));
+      if (savedBlogs) {
+        try {
+          const parsed = JSON.parse(savedBlogs);
+          if (Array.isArray(parsed) && parsed.length > 0) setBlogPosts(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved blogs:', e);
+        }
+      }
 
       const savedTestimonials = localStorage.getItem(STORAGE_KEYS.TESTIMONIALS);
-      if (savedTestimonials) setTestimonials(JSON.parse(savedTestimonials));
+      if (savedTestimonials) {
+        try {
+          const parsed = JSON.parse(savedTestimonials);
+          if (Array.isArray(parsed) && parsed.length > 0) setTestimonials(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved testimonials:', e);
+        }
+      }
 
       const savedFaqs = localStorage.getItem(STORAGE_KEYS.FAQS);
-      if (savedFaqs) setFaqs(JSON.parse(savedFaqs));
+      if (savedFaqs) {
+        try {
+          const parsed = JSON.parse(savedFaqs);
+          if (Array.isArray(parsed) && parsed.length > 0) setFaqs(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved faqs:', e);
+        }
+      }
 
       const savedEnquiries = localStorage.getItem(STORAGE_KEYS.ENQUIRIES);
-      if (savedEnquiries) setEnquiries(JSON.parse(savedEnquiries));
+      if (savedEnquiries) {
+        try {
+          const parsed = JSON.parse(savedEnquiries);
+          if (Array.isArray(parsed)) setEnquiries(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved enquiries:', e);
+        }
+      }
 
       const savedCustomTrips = localStorage.getItem(STORAGE_KEYS.CUSTOM_TRIPS);
-      if (savedCustomTrips) setCustomTrips(JSON.parse(savedCustomTrips));
+      if (savedCustomTrips) {
+        try {
+          const parsed = JSON.parse(savedCustomTrips);
+          if (Array.isArray(parsed)) setCustomTrips(parsed);
+        } catch (e) {
+          console.warn('Error parsing saved custom trips:', e);
+        }
+      }
 
       const savedSession = localStorage.getItem(STORAGE_KEYS.ADMIN_SESSION);
       if (savedSession) {
-        const session = JSON.parse(savedSession);
-        if (session && session.isLoggedIn) {
-          setIsAdminLoggedIn(true);
-          setAdminUserEmail(session.email || 'armani@kovaiholidays.com');
+        try {
+          const session = JSON.parse(savedSession);
+          if (session && session.isLoggedIn) {
+            setIsAdminLoggedIn(true);
+            setAdminUserEmail(session.email || 'armani@kovaiholidays.com');
+          }
+        } catch (e) {
+          console.warn('Error parsing admin session:', e);
         }
       }
 

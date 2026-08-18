@@ -21,7 +21,10 @@ interface FooterProps {
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   const { settings, destinations } = useStore();
   const currentYear = new Date().getFullYear();
-  const whatsappHref = createWhatsAppUrl(settings.whatsappNumber, { type: 'general' });
+  const whatsappHref = createWhatsAppUrl(settings?.whatsappNumber, { type: 'general' });
+  const phoneClean = (settings?.phone || '+91 98430 12345').toString().replace(/[^0-9+]/g, '');
+  const phoneDisplay = settings?.phoneDisplay || settings?.phone || '+91 98430 12345';
+  const whatsappDisplay = settings?.whatsappDisplay || settings?.phoneDisplay || '+91 98430 12345';
 
   const handleNav = (path: string) => {
     onNavigate(path);
@@ -149,14 +152,14 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </li>
               <li className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-teal-400 shrink-0" />
-                <a href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`} className="text-xs hover:text-amber-300">
-                  {settings.phoneDisplay}
+                <a href={`tel:${phoneClean}`} className="text-xs hover:text-amber-300">
+                  {phoneDisplay}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">
                 <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
                 <a href={whatsappHref} target="_blank" rel="noopener noreferrer" className="text-xs hover:text-emerald-300">
-                  WhatsApp: {settings.whatsappDisplay}
+                  WhatsApp: {whatsappDisplay}
                 </a>
               </li>
               <li className="flex items-center gap-2.5">

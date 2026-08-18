@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../services/storeContext';
-import { formatINR } from '../utils/helpers';
+import { formatINR, slugify } from '../utils/helpers';
 import { 
   Lock, 
   Unlock, 
@@ -178,10 +178,10 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     const headers = ['Ref ID', 'Name', 'Phone', 'Email', 'Destination', 'Package', 'Travel Date', 'Adults', 'Children', 'Status', 'Message', 'Created At'];
     const rows = enquiries.map(e => [
       e.referenceNumber,
-      `"${e.name.replace(/"/g, '""')}"`,
-      `"${e.phone}"`,
-      `"${e.email}"`,
-      `"${e.destination}"`,
+      `"${(e.name || '').replace(/"/g, '""')}"`,
+      `"${e.phone || ''}"`,
+      `"${e.email || ''}"`,
+      `"${e.destination || ''}"`,
       `"${(e.packageTitle || '').replace(/"/g, '""')}"`,
       `"${e.travelDate || ''}"`,
       e.adults,
@@ -473,9 +473,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-700">
                     {filteredEnquiries.map(enq => {
-                      const cleanPhone = enq.phone.replace(/[^0-9]/g, '');
+                      const cleanPhone = (enq.phone || '').toString().replace(/[^0-9]/g, '');
                       const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-                        `Hello ${enq.name}, greetings from Kovai Compass Holidays! Regarding your holiday inquiry for ${enq.destination} (Ref: ${enq.referenceNumber}): We would be delighted to share a customized itinerary.`
+                        `Hello ${enq.name || 'Traveler'}, greetings from Kovai Compass Holidays! Regarding your holiday inquiry for ${enq.destination || 'your trip'} (Ref: ${enq.referenceNumber || ''}): We would be delighted to share a customized itinerary.`
                       )}`;
 
                       return (
@@ -558,7 +558,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                               </a>
 
                               <a
-                                href={`tel:${enq.phone.replace(/[^0-9+]/g, '')}`}
+                                href={`tel:${(enq.phone || '').toString().replace(/[^0-9+]/g, '')}`}
                                 className="p-2 bg-blue-50 hover:bg-blue-600 text-blue-700 hover:text-white rounded-lg border border-blue-200 transition-all"
                                 title="Call Customer"
                               >
@@ -601,9 +601,9 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
             ) : (
               <div className="space-y-4">
                 {customTrips.map(trip => {
-                  const cleanPhone = trip.phone.replace(/[^0-9]/g, '');
+                  const cleanPhone = (trip.phone || '').toString().replace(/[^0-9]/g, '');
                   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
-                    `Hello ${trip.name}, greetings from Kovai Compass Holidays! We reviewed your custom holiday plan for ${trip.destination} (${trip.durationDays} Days for ${trip.adults} Adults). We are preparing your quotation.`
+                    `Hello ${trip.name || 'Traveler'}, greetings from Kovai Compass Holidays! We reviewed your custom holiday plan for ${trip.destination || 'your vacation'} (${trip.durationDays || 'Multi'} Days for ${trip.adults || 2} Adults). We are preparing your quotation.`
                   )}`;
 
                   return (
@@ -1210,7 +1210,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
               onSubmit={e => {
                 e.preventDefault();
                 if (!editingPkg.title || !editingPkg.slug) {
-                  editingPkg.slug = editingPkg.title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                  editingPkg.slug = slugify(editingPkg.title);
                 }
                 savePackage(editingPkg);
                 setEditingPkg(null);
@@ -1223,7 +1223,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 <input
                   type="text"
                   value={editingPkg.title}
-                  onChange={e => setEditingPkg({ ...editingPkg, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })}
+                  onChange={e => setEditingPkg({ ...editingPkg, title: e.target.value, slug: slugify(e.target.value) })}
                   placeholder="e.g. 5D/4N Singapore City & Sentosa Island Extravaganza"
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl"
                   required
@@ -1400,7 +1400,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                 <input
                   type="text"
                   value={editingBlog.title}
-                  onChange={e => setEditingBlog({ ...editingBlog, title: e.target.value, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-') })}
+                  onChange={e => setEditingBlog({ ...editingBlog, title: e.target.value, slug: slugify(e.target.value) })}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold"
                   required
                 />

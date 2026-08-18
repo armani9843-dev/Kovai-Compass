@@ -12,7 +12,7 @@ export const formatINR = (amount?: number): string => {
 };
 
 export const createWhatsAppUrl = (
-  phoneNumber: string, 
+  phoneNumber?: string, 
   context?: { 
     type?: 'package' | 'destination' | 'custom' | 'general';
     title?: string; 
@@ -20,8 +20,9 @@ export const createWhatsAppUrl = (
     referenceNumber?: string;
   }
 ): string => {
-  // Clean phone number: remove +, -, spaces
-  const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+  // Clean phone number: remove +, -, spaces safely
+  const rawNumber = phoneNumber ? String(phoneNumber) : '919843012345';
+  const cleanNumber = rawNumber.replace(/[^0-9]/g, '') || '919843012345';
 
   let message = 'Hello Kovai Compass Holidays! ';
 
@@ -40,7 +41,8 @@ export const createWhatsAppUrl = (
   return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 };
 
-export const slugify = (text: string): string => {
+export const slugify = (text?: string): string => {
+  if (!text) return '';
   return text
     .toString()
     .toLowerCase()

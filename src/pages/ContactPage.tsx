@@ -30,7 +30,10 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const whatsappHref = createWhatsAppUrl(settings.whatsappNumber, { type: 'general' });
+  const whatsappHref = createWhatsAppUrl(settings?.whatsappNumber, { type: 'general' });
+  const phoneClean = (settings?.phone || '+91 98430 12345').toString().replace(/[^0-9+]/g, '');
+  const phoneDisplay = settings?.phoneDisplay || settings?.phone || '+91 98430 12345';
+  const whatsappDisplay = settings?.whatsappDisplay || settings?.phoneDisplay || '+91 98430 12345';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,8 +117,8 @@ export const ContactPage: React.FC<ContactPageProps> = ({ onNavigate }) => {
                   </div>
                   <div>
                     <h4 className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-0.5">Direct Phone</h4>
-                    <a href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`} className="text-xs sm:text-sm text-slate-700 hover:text-[#0D7F86] font-medium">
-                      {settings.phoneDisplay}
+                    <a href={`tel:${phoneClean}`} className="text-xs sm:text-sm text-slate-700 hover:text-[#0D7F86] font-medium">
+                      {phoneDisplay}
                     </a>
                   </div>
                 </div>

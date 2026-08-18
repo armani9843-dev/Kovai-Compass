@@ -93,29 +93,30 @@ export default function App() {
 
   // Sync document title based on current route
   useEffect(() => {
-    if (currentPath === '/') {
-      document.title = `${settings.companyName} | ${settings.secondaryTagline || 'International Tour Packages'}`;
+    const company = settings?.companyName || 'Kovai Compass Holidays';
+    if (currentPath === '/' || currentPath === '') {
+      document.title = `${company} | ${settings?.secondaryTagline || 'International Tour Packages'}`;
     } else if (currentPath.startsWith('/destinations/')) {
-      const slug = currentPath.replace('/destinations/', '');
-      document.title = `${slug.charAt(0).toUpperCase() + slug.slice(1)} Holidays | ${settings.companyName}`;
+      const slug = (currentPath || '').replace('/destinations/', '');
+      document.title = `${slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Destinations'} Holidays | ${company}`;
     } else if (currentPath === '/destinations') {
-      document.title = `International Destinations | ${settings.companyName}`;
+      document.title = `International Destinations | ${company}`;
     } else if (currentPath.startsWith('/packages/')) {
-      document.title = `Tour Package Details | ${settings.companyName}`;
+      document.title = `Tour Package Details | ${company}`;
     } else if (currentPath === '/packages') {
-      document.title = `Holiday Packages & Itineraries | ${settings.companyName}`;
+      document.title = `Holiday Packages & Itineraries | ${company}`;
     } else if (currentPath === '/custom-tours') {
-      document.title = `Custom Holiday Planning | ${settings.companyName}`;
+      document.title = `Custom Holiday Planning | ${company}`;
     } else if (currentPath === '/travel-guide') {
-      document.title = `Travel Guide & Visa Tips | ${settings.companyName}`;
+      document.title = `Travel Guide & Visa Tips | ${company}`;
     } else if (currentPath.startsWith('/travel-guide/')) {
-      document.title = `Travel Article | ${settings.companyName}`;
+      document.title = `Travel Article | ${company}`;
     } else if (currentPath === '/about') {
-      document.title = `About Us | ${settings.companyName}`;
+      document.title = `About Us | ${company}`;
     } else if (currentPath === '/contact') {
-      document.title = `Contact Our Travel Desk | ${settings.companyName}`;
+      document.title = `Contact Our Travel Desk | ${company}`;
     } else if (currentPath === '/admin') {
-      document.title = `Admin Management | ${settings.companyName}`;
+      document.title = `Admin Management | ${company}`;
     }
   }, [currentPath, settings]);
 

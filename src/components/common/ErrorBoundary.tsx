@@ -28,6 +28,16 @@ export class ErrorBoundary extends Component<Props, State> {
     window.location.reload();
   };
 
+  private handleResetCache = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {
+      console.warn('Could not clear storage:', e);
+    }
+    window.location.href = '/';
+  };
+
   private handleGoHome = () => {
     window.location.href = '/';
   };
@@ -61,22 +71,22 @@ export class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <button
                 onClick={this.handleReload}
-                className="flex-1 bg-gradient-to-r from-[#BF953F] via-[#DFBA5A] to-[#B38728] text-[#071B33] font-bold text-sm py-3 px-5 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                className="flex-1 bg-gradient-to-r from-[#BF953F] via-[#DFBA5A] to-[#B38728] text-[#071B33] font-bold text-sm py-3 px-4 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-lg cursor-pointer"
               >
                 <RefreshCw className="w-4 h-4" />
                 <span>Reload Site</span>
               </button>
 
               <button
-                onClick={this.handleGoHome}
-                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium text-sm py-3 px-5 rounded-xl transition-colors cursor-pointer"
+                onClick={this.handleResetCache}
+                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-medium text-sm py-3 px-4 rounded-xl transition-colors cursor-pointer"
               >
-                Go to Home
+                Reset &amp; Reload
               </button>
             </div>
 
             <p className="text-[11px] text-slate-400">
-              Direct Travel Assistance: +91 98430 00000 / support@kovaicompassholidays.com
+              Direct Travel Assistance: +91 98430 12345 / info@kovaicompassholidays.com
             </p>
           </div>
         </div>

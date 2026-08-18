@@ -60,12 +60,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const whatsappHref = createWhatsAppUrl(settings.whatsappNumber, { type: 'general' });
+  const whatsappHref = createWhatsAppUrl(settings?.whatsappNumber, { type: 'general' });
+  const phoneClean = (settings?.phone || '+91 98430 12345').toString().replace(/[^0-9+]/g, '');
+  const phoneDisplay = settings?.phoneDisplay || settings?.phone || '+91 98430 12345';
+  const whatsappDisplay = settings?.whatsappDisplay || settings?.phoneDisplay || '+91 98430 12345';
 
   return (
     <header className="sticky top-0 z-40 w-full transition-all duration-300">
       {/* Top Running Announcement Ticker (Left to Right) */}
-      {settings.showAnnouncement && (
+      {settings?.showAnnouncement && (
         <div 
           onClick={() => openEnquiryModal()}
           className="bg-[#051529] text-amber-200 text-xs py-2 px-3 border-b border-amber-500/30 overflow-hidden relative select-none cursor-pointer group hover:bg-[#081e3a] transition-colors w-full max-w-full"
@@ -85,7 +88,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
                   <span key={i} className="flex items-center gap-3">
                     <Sparkles className="w-3.5 h-3.5 text-[#F6D365] shrink-0 animate-pulse" />
                     <span className="font-semibold text-amber-200 group-hover:text-white transition-colors">
-                      Special Singapore &amp; Malaysia Holiday Packages Available for Upcoming Seasons – Enquire Today for Custom Itineraries!
+                      {settings?.announcementText || 'Special Singapore & Malaysia Holiday Packages Available for Upcoming Seasons – Enquire Today for Custom Itineraries!'}
                     </span>
                     <span className="text-amber-500/70 font-bold">•</span>
                   </span>
@@ -101,11 +104,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-6">
             <a 
-              href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`} 
+              href={`tel:${phoneClean}`} 
               className="flex items-center gap-1.5 hover:text-amber-400 transition-colors"
             >
               <Phone className="w-3.5 h-3.5 text-teal-400" />
-              <span>Call: {settings.phoneDisplay}</span>
+              <span>Call: {phoneDisplay}</span>
             </a>
             <span className="text-slate-600">|</span>
             <a 
@@ -115,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               className="flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
             >
               <MessageCircle className="w-3.5 h-3.5" />
-              <span>WhatsApp: {settings.whatsappDisplay}</span>
+              <span>WhatsApp: {whatsappDisplay}</span>
             </a>
             <span className="text-slate-600">|</span>
             <span className="flex items-center gap-1.5 text-slate-400">
@@ -338,9 +341,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, onNavigate }) => {
               </button>
 
               <div className="flex items-center justify-center text-xs text-slate-400 pt-1">
-                <a href={`tel:${settings.phone.replace(/[^0-9+]/g, '')}`} className="flex items-center gap-1.5 text-teal-400 hover:underline">
+                <a href={`tel:${phoneClean}`} className="flex items-center gap-1.5 text-teal-400 hover:underline">
                   <Phone className="w-3.5 h-3.5" />
-                  <span>Call Desk: {settings.phoneDisplay}</span>
+                  <span>Call Desk: {phoneDisplay}</span>
                 </a>
               </div>
             </div>
