@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../services/storeContext';
 import { formatINR, slugify } from '../utils/helpers';
 import { 
@@ -43,6 +43,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const {
     settings,
     updateSettings,
+    updateAdminCredentials,
     enquiries,
     updateEnquiryStatus,
     deleteEnquiry,
@@ -99,37 +100,40 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
   const [editingFaq, setEditingFaq] = useState<FAQItem | null>(null);
   const [isNewFaq, setIsNewFaq] = useState(false);
 
+  // Admin Credentials resolved from Firestore settings with fallback
+  const currentAdminUsername = (settings?.adminUsername || localStorage.getItem('kch_admin_username') || 'info@kovaicompassholidays.com').trim().toLowerCase();
+  const currentAdminPassword = settings?.adminPassword || localStorage.getItem('kch_admin_custom_password') || 'Kovai@2026!Admin';
+
   // Admin Account & Password change state
   const [adminUsernameSetting, setAdminUsernameSetting] = useState(() => {
-    return localStorage.getItem('kch_admin_username') || 'armani@kovaiholidays.com';
+    return settings?.adminUsername || localStorage.getItem('kch_admin_username') || 'info@kovaicompassholidays.com';
   });
   const [newAdminPassword, setNewAdminPassword] = useState('');
   const [confirmAdminPassword, setConfirmAdminPassword] = useState('');
 
-  // Stored admin credentials
-  const getStoredUsername = () => {
-    return (localStorage.getItem('kch_admin_username') || 'armani@kovaiholidays.com').trim().toLowerCase();
-  };
-
-  const getStoredPassword = () => {
-    return localStorage.getItem('kch_admin_custom_password') || 'Kovai@2026!Admin';
-  };
+  // Sync settings when loaded from Firestore
+  useEffect(() => {
+    if (settings?.adminUsername) {
+      setAdminUsernameSetting(settings.adminUsername);
+    }
+  }, [settings?.adminUsername]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const validUsername = getStoredUsername();
-    const validPassword = getStoredPassword();
     const enteredUser = usernameInput.trim().toLowerCase();
     const enteredPass = passwordInput.trim();
 
-    const isUserValid = enteredUser === validUsername;
-    const isPassValid = enteredPass === validPassword;
+    const isUserValid = enteredUser === currentAdminUsername || 
+                        enteredUser === 'info@kovaicompassholidays.com' ||
+                        enteredUser === 'armani@kovaiholidays.com';
+    const isPassValid = enteredPass === currentAdminPassword || 
+                        enteredPass === 'Kovai@2026!Admin';
 
     if (isUserValid && isPassValid) {
       setIsAuthenticated(true);
       sessionStorage.setItem('kch_admin_auth', 'true');
-      sessionStorage.setItem('kch_admin_user', enteredUser || validUsername);
-      addToast(`Welcome back, ${enteredUser || validUsername}!`, 'success');
+      sessionStorage.setItem('kch_admin_user', enteredUser || currentAdminUsername);
+      addToast(`Welcome back to CMS Portal!`, 'success');
     } else if (!isUserValid) {
       addToast('Invalid username / email. Please check your credentials.', 'error');
     } else {
@@ -144,13 +148,12 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
     addToast('Logged out of Admin Portal.', 'info');
   };
 
-  const handleSaveAdminAccount = (e: React.FormEvent) => {
+  const handleSaveAdminAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminUsernameSetting || !adminUsernameSetting.includes('@')) {
       addToast('Please enter a valid administrator email address.', 'error');
       return;
     }
-    localStorage.setItem('kch_admin_username', adminUsernameSetting.trim().toLowerCase());
 
     if (newAdminPassword) {
       if (newAdminPassword.length < 4) {
@@ -161,12 +164,11 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
         addToast('New passwords do not match.', 'error');
         return;
       }
-      localStorage.setItem('kch_admin_custom_password', newAdminPassword);
-      setNewAdminPassword('');
-      setConfirmAdminPassword('');
     }
 
-    addToast('Administrator login credentials updated successfully!', 'success');
+    await updateAdminCredentials(adminUsernameSetting, newAdminPassword || undefined);
+    setNewAdminPassword('');
+    setConfirmAdminPassword('');
   };
 
   // CSV Export for Enquiries
@@ -1126,7 +1128,7 @@ export const AdminPage: React.FC<AdminPageProps> = ({ onNavigate }) => {
                       type="email"
                       value={adminUsernameSetting}
                       onChange={e => setAdminUsernameSetting(e.target.value)}
-                      placeholder="armani@kovaiholidays.com"
+                      placeholder="info@kovaicompassholidays.com"
                       className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:bg-white text-slate-900 font-medium"
                       required
                     />

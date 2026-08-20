@@ -32,7 +32,9 @@ export const INITIAL_SETTINGS: SiteSettings = {
     metaTitle: 'Kovai Compass Holidays | Curated International Tour Packages & Holidays',
     metaDescription: 'Discover international holidays to Singapore, Sri Lanka, Malaysia, Thailand & Cambodia with Kovai Compass Holidays. Tailor-made itineraries, visa support, and 24/7 travel care.',
     keywords: 'Singapore holiday packages, Malaysia tour packages from India, Sri Lanka family tours, Thailand holidays, Cambodia Angkor Wat tour, Coimbatore travel agency, international tour operators',
-  }
+  },
+  adminUsername: 'info@kovaicompassholidays.com',
+  adminPassword: 'Kovai@2026!Admin'
 };
 
 export const INITIAL_DESTINATIONS: Destination[] = [

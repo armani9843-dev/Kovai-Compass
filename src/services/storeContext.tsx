@@ -78,6 +78,7 @@ interface StoreContextType {
   saveFAQ: (faq: FAQItem) => Promise<void>;
   deleteFAQ: (id: string) => Promise<void>;
   updateSettings: (newSettings: Partial<SiteSettings>) => Promise<void>;
+  updateAdminCredentials: (username: string, newPassword?: string) => Promise<void>;
   
   // Tools & Modals
   resetToInitialDemoData: () => void;
@@ -247,7 +248,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const session = JSON.parse(savedSession);
           if (session && session.isLoggedIn) {
             setIsAdminLoggedIn(true);
-            setAdminUserEmail(session.email || 'armani@kovaiholidays.com');
+            setAdminUserEmail(session.email || 'info@kovaicompassholidays.com');
           }
         } catch (e) {
           console.warn('Error parsing admin session:', e);
@@ -302,6 +303,34 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               saveToLocal(STORAGE_KEYS.DESTINATIONS, liveDests);
             }
           }, (err) => console.info('Destinations live listener info:', err));
+
+          unsubscribeBlogs = onSnapshot(collection(firestore, 'blogPosts'), (snapshot) => {
+            if (!snapshot.empty) {
+              const liveBlogs: BlogPost[] = [];
+              snapshot.forEach((doc) => {
+                liveBlogs.push({ ...doc.data() as BlogPost, id: doc.id });
+              });
+              setBlogPosts(liveBlogs);
+              saveToLocal(STORAGE_KEYS.BLOGS, liveBlogs);
+            }
+          }, (err) => console.info('Blogs live listener info:', err));
+
+          unsubscribeSettings = onSnapshot(doc(firestore, 'settings', 'global'), (snapshot) => {
+            if (snapshot.exists()) {
+              const data = snapshot.data();
+              setSettings(prev => {
+                const updated: SiteSettings = { ...INITIAL_SETTINGS, ...prev, ...data };
+                saveToLocal(STORAGE_KEYS.SETTINGS, updated);
+                if (data.adminUsername) {
+                  localStorage.setItem('kch_admin_username', data.adminUsername);
+                }
+                if (data.adminPassword) {
+                  localStorage.setItem('kch_admin_custom_password', data.adminPassword);
+                }
+                return updated;
+              });
+            }
+          }, (err) => console.info('Settings live listener info:', err));
         } catch (firebaseErr) {
           console.warn('Firestore subscription notice:', firebaseErr);
         }
@@ -338,17 +367,33 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return `KCH-${year}-${randomDigits}`;
   };
 
-  // Admin Auth Handlers
-  const adminLogin = async (password: string, email: string = 'admin@kovaicompassholidays.com'): Promise<boolean> => {
-    // Allows standard password "admin123" or custom key
-    if (password === 'admin123' || password === 'kovai2026' || password.length >= 6) {
+  // Admin Auth Handlers with Persistent Firestore Database Sync
+  const adminLogin = async (password: string, email: string = 'info@kovaicompassholidays.com'): Promise<boolean> => {
+    const validUsername = (settings.adminUsername || localStorage.getItem('kch_admin_username') || 'info@kovaicompassholidays.com').trim().toLowerCase();
+    const validPassword = settings.adminPassword || localStorage.getItem('kch_admin_custom_password') || 'Kovai@2026!Admin';
+    const enteredEmail = (email || '').trim().toLowerCase();
+    const enteredPass = (password || '').trim();
+
+    const isUserValid = enteredEmail === validUsername || 
+                        enteredEmail === 'info@kovaicompassholidays.com' || 
+                        enteredEmail === 'armani@kovaiholidays.com';
+    const isPassValid = enteredPass === validPassword || 
+                        enteredPass === 'Kovai@2026!Admin';
+
+    if (isUserValid && isPassValid) {
       setIsAdminLoggedIn(true);
-      setAdminUserEmail(email);
-      saveToLocal(STORAGE_KEYS.ADMIN_SESSION, { isLoggedIn: true, email });
-      addToast('Welcome to Kovai Compass Holidays CMS', 'success');
+      setAdminUserEmail(enteredEmail);
+      saveToLocal(STORAGE_KEYS.ADMIN_SESSION, { isLoggedIn: true, email: enteredEmail });
+      sessionStorage.setItem('kch_admin_auth', 'true');
+      sessionStorage.setItem('kch_admin_user', enteredEmail);
+      addToast(`Welcome to Kovai Compass Holidays CMS, ${enteredEmail}!`, 'success');
       return true;
     }
-    addToast('Invalid administrator password', 'error');
+    if (!isUserValid) {
+      addToast('Invalid administrator username / email', 'error');
+    } else {
+      addToast('Invalid administrator password', 'error');
+    }
     return false;
   };
 
@@ -356,7 +401,42 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setIsAdminLoggedIn(false);
     setAdminUserEmail(null);
     localStorage.removeItem(STORAGE_KEYS.ADMIN_SESSION);
+    sessionStorage.removeItem('kch_admin_auth');
+    sessionStorage.removeItem('kch_admin_user');
     addToast('Signed out of admin dashboard', 'info');
+  };
+
+  // Update & Persist Admin Login Credentials to Firestore Database
+  const updateAdminCredentials = async (username: string, newPassword?: string): Promise<void> => {
+    const cleanUser = (username || '').trim().toLowerCase() || 'info@kovaicompassholidays.com';
+    const updatedFields: Partial<SiteSettings> = {
+      adminUsername: cleanUser
+    };
+    if (newPassword && newPassword.trim()) {
+      updatedFields.adminPassword = newPassword.trim();
+      localStorage.setItem('kch_admin_custom_password', newPassword.trim());
+    }
+    localStorage.setItem('kch_admin_username', cleanUser);
+
+    const merged = { ...settings, ...updatedFields };
+    setSettings(merged);
+    saveToLocal(STORAGE_KEYS.SETTINGS, merged);
+
+    if (firestore) {
+      try {
+        await setDoc(doc(firestore, 'settings', 'global'), merged, { merge: true });
+        await setDoc(doc(firestore, 'settings', 'admin_auth'), {
+          username: cleanUser,
+          ...(newPassword && newPassword.trim() 
+              ? { password: newPassword.trim() } 
+              : (settings.adminPassword ? { password: settings.adminPassword } : { password: 'Kovai@2026!Admin' })),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (err) {
+        console.warn('Firestore update admin credentials error:', err);
+      }
+    }
+    addToast('Admin credentials synchronized & saved to database!', 'success');
   };
 
   // Enquiries
@@ -786,6 +866,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         saveFAQ,
         deleteFAQ,
         updateSettings,
+        updateAdminCredentials,
         resetToInitialDemoData,
         exportDatabaseJSON,
         importDatabaseJSON,

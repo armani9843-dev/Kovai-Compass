@@ -209,4 +209,6 @@ export interface SiteSettings {
     metaDescription: string;
     keywords: string;
   };
+  adminUsername?: string;
+  adminPassword?: string;
 }

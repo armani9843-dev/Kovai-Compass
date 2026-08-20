@@ -32,6 +32,14 @@ service cloud.firestore {
       allow read, write: if true;
     }
 
+    match /customTripRequests/{requestId} {
+      allow read, write: if true;
+    }
+
+    match /faqs/{faqId} {
+      allow read, write: if true;
+    }
+
     // General app settings & config
     match /settings/{settingId} {
       allow read, write: if true;
